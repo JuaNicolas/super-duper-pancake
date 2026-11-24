@@ -1,0 +1,27 @@
+<p class="eyebrow">Step 2 of 2</p>
+<h1>Pick your cast</h1>
+<p class="lead">We choose 50 characters from your deck. The same 50 return in every round.</p>
+<section class="grid two">
+  @for (deck of decks.decks(); track deck.id) {
+    <mat-card
+      ><mat-card-content
+        ><p class="eyebrow">{{ deck.builtIn ? 'Starter deck' : 'Custom deck' }}</p>
+        <h2>{{ deck.name }}</h2>
+        <p>{{ deck.cards.length }} characters</p>
+        <button mat-flat-button [disabled]="deck.cards.length < 50" (click)="select(deck)">
+          Play this deck
+        </button>
+        @if (deck.cards.length < 50) {
+          <p>Add {{ 50 - deck.cards.length }} more characters to play.</p>
+        }
+      </mat-card-content></mat-card
+    >
+  }
+</section>
+@if (error()) {
+  <p class="error" role="alert">{{ error() }}</p>
+}
+<div class="actions">
+  <a mat-stroked-button routerLink="/decks">Create or manage decks</a
+  ><a mat-button routerLink="/team-setup">Back to teams</a>
+</div>

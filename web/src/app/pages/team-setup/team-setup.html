@@ -1,0 +1,67 @@
+<p class="eyebrow">Step 1 of 2</p>
+<h1>Bring your people</h1>
+<p class="lead">
+  Add at least four players. Teams stay as even as possible; an odd player is welcome.
+</p>
+<form class="actions" (ngSubmit)="addPlayer()">
+  <mat-form-field
+    ><mat-label>Player name</mat-label
+    ><input matInput name="playerName" [(ngModel)]="playerName" maxlength="60" autocomplete="off"
+  /></mat-form-field>
+  <button mat-flat-button type="submit">Add player</button>
+</form>
+<ul class="player-list">
+  @for (player of players(); track player.id) {
+    <li>
+      {{ player.name }}
+      <button
+        mat-button
+        (click)="removePlayer(player.id)"
+        [attr.aria-label]="'Remove ' + player.name"
+      >
+        Remove
+      </button>
+    </li>
+  }
+</ul>
+<div class="grid two">
+  @for (name of teamNames; track $index; let i = $index) {
+    <mat-form-field
+      ><mat-label>Team {{ i + 1 }} name</mat-label
+      ><input matInput [(ngModel)]="teamNames[i]" maxlength="60"
+    /></mat-form-field>
+  }
+</div>
+<button mat-stroked-button [disabled]="players().length < 4" (click)="balance()">
+  Create / auto-balance teams
+</button>
+<section class="grid two">
+  @for (team of teams(); track team.id; let i = $index) {
+    <div class="panel">
+      <h2>{{ teamNames[i] || team.name }}</h2>
+      <p>{{ team.players.length }} players</p>
+      <ul class="player-list">
+        @for (player of team.players; track player.id) {
+          <li>
+            {{ player.name }}
+            <button
+              mat-button
+              (click)="movePlayer(player.id)"
+              [attr.aria-label]="'Move ' + player.name + ' to other team'"
+            >
+              Switch team
+            </button>
+          </li>
+        }
+      </ul>
+    </div>
+  }
+</section>
+@if (error()) {
+  <p class="error" role="alert">{{ error() }}</p>
+}
+<div class="actions">
+  <button mat-flat-button [disabled]="teams().length !== 2" (click)="continue()">
+    Choose a deck
+  </button>
+</div>

@@ -1,0 +1,12 @@
+<section class="hero">
+  <p class="eyebrow">That's a wrap · 150 points awarded</p>
+  <h1>{{ winner() }}</h1>
+  <p class="lead">
+    Three rounds, one unforgettable game night. Give both teams a round of applause.
+  </p>
+</section>
+<section class="panel"><app-scoreboard /></section>
+<div class="actions">
+  <button mat-flat-button (click)="again()">Play again</button
+  ><a mat-stroked-button routerLink="/">Back to home</a>
+</div>
