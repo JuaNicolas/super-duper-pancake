@@ -1,6 +1,6 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { Deck } from '../models/game.models';
-import { StorageService } from './storage.service';
+import { MAX_STORAGE_CHARACTERS, StorageService } from './storage.service';
 import { validDeck } from './validation';
 
 export const DECK_STORAGE_KEY = 'party-cards.decks.v1';
@@ -110,7 +110,12 @@ export class DeckService {
       throw new Error('The built-in deck cannot be changed.');
     const existing = this.decksValue().filter((item) => item.id !== deck.id);
     if (existing.length >= 51) throw new Error('You can store at most 50 custom decks.');
-    this.decksValue.set([...existing, { ...structuredClone(deck), builtIn: false }]);
+    const next = [...existing, { ...structuredClone(deck), builtIn: false }];
+    if (JSON.stringify(next.filter((item) => !item.builtIn)).length > MAX_STORAGE_CHARACTERS)
+      throw new Error(
+        'Your deck collection is too large to save. Remove some decks or cards first.',
+      );
+    this.decksValue.set(next);
     this.persist();
   }
 

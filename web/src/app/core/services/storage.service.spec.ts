@@ -1,5 +1,5 @@
 import { vi } from 'vitest';
-import { StorageService } from './storage.service';
+import { MAX_STORAGE_CHARACTERS, StorageService } from './storage.service';
 
 describe('StorageService', () => {
   const storage = new StorageService();
@@ -18,8 +18,19 @@ describe('StorageService', () => {
   it('returns null for malformed or oversized records', () => {
     localStorage.setItem('test', '{broken');
     expect(storage.read('test')).toBeNull();
-    localStorage.setItem('test', ' '.repeat(2_000_001));
+    localStorage.setItem('test', ' '.repeat(MAX_STORAGE_CHARACTERS + 1));
     expect(storage.read('test')).toBeNull();
+  });
+
+  it('writes readable records at the size limit and preserves them when oversized writes are skipped', () => {
+    const boundary = 'a'.repeat(MAX_STORAGE_CHARACTERS - 2);
+    storage.write('test', boundary);
+    expect(localStorage.getItem('test')!.length).toBe(MAX_STORAGE_CHARACTERS);
+    expect(storage.read('test')).toBe(boundary);
+    expect(() => storage.write('test', `${boundary}a`)).not.toThrow();
+    expect(storage.read('test')).toBe(boundary);
+    storage.write('missing', `${boundary}a`);
+    expect(localStorage.getItem('missing')).toBeNull();
   });
 
   it('handles blocked access and quota errors without breaking the game', () => {

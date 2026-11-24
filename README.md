@@ -90,6 +90,9 @@ Custom decks can be edited, deleted, and imported/exported as JSON:
 Small decks can be saved while being edited, but cannot be played until they
 contain 50 characters. Importing creates a custom copy; the built-in deck is
 protected. Downloads contain deck data, not game progress.
+Custom collections are limited to 50 decks, 1,000 cards per deck, and
+2,000,000 serialized characters in total. Oversized saves are rejected
+without changing the existing collection.
 
 ## Future multiplayer support
 

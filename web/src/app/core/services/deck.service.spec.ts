@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { Deck } from '../models/game.models';
 import { DECK_STORAGE_KEY, DeckService } from './deck.service';
-import { StorageService } from './storage.service';
+import { MAX_STORAGE_CHARACTERS, StorageService } from './storage.service';
 
 describe('DeckService', () => {
   let service: DeckService;
@@ -87,4 +87,40 @@ describe('DeckService', () => {
     expect(() => service.save(deck)).toThrow('at most 50');
     expect(() => service.save({ ...deck, id: 'deck-0', name: 'Updated' })).not.toThrow();
   });
+
+  it.each(['save', 'import'])(
+    'preserves saved and live decks when %s exceeds the collection size cap',
+    (method) => {
+      const largeDeck: Deck = {
+        id: 'large',
+        name: 'Large valid deck',
+        cards: Array.from({ length: 1000 }, (_, index) => ({
+          id: `card-${index}`.padEnd(100, 'x'),
+          name: `Character ${index}`.padEnd(120, 'x'),
+        })),
+      };
+      service.save(deck);
+      for (let index = 0; index < 8; index++) {
+        service.save({ ...largeDeck, id: `large-${index}` });
+      }
+      const previous = service.decks();
+      const saved = localStorage.getItem(DECK_STORAGE_KEY)!;
+      expect(saved.length).toBeLessThanOrEqual(MAX_STORAGE_CHARACTERS);
+      const candidate = { ...largeDeck, id: 'one-too-many' };
+      expect(JSON.stringify(candidate).length).toBeLessThan(300_000);
+      expect(JSON.stringify([...JSON.parse(saved), candidate]).length).toBeGreaterThan(
+        MAX_STORAGE_CHARACTERS,
+      );
+      expect(() =>
+        method === 'save' ? service.save(candidate) : service.importJson(JSON.stringify(candidate)),
+      ).toThrow('too large');
+      expect(service.decks()).toBe(previous);
+      expect(localStorage.getItem(DECK_STORAGE_KEY)).toBe(saved);
+      expect(() => service.save({ ...largeDeck, id: deck.id })).toThrow('too large');
+      expect(service.decks()).toBe(previous);
+      expect(localStorage.getItem(DECK_STORAGE_KEY)).toBe(saved);
+      const restored = TestBed.runInInjectionContext(() => new DeckService());
+      expect(restored.decks()).toEqual(previous);
+    },
+  );
 });
