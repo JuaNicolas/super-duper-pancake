@@ -1,0 +1,19 @@
+<p class="eyebrow">Take a breather</p>
+<h1>Round {{ game.state()?.round }} complete!</h1>
+<p class="lead">All 50 characters guessed. Keep them in mind: the same deck returns next round.</p>
+<section class="panel"><app-scoreboard /></section>
+<section class="grid two">
+  @for (stat of statistics(); track stat.teamId) {
+    <div class="panel">
+      <h2>{{ stat.name }}</h2>
+      <p>
+        <strong>{{ stat.rounds[(game.state()?.round ?? 1) - 1] }}</strong> correct guesses this
+        round
+      </p>
+      <p>{{ stat.turns }} turns played · {{ stat.passes }} passes</p>
+    </div>
+  }
+</section>
+<button mat-flat-button (click)="continue()">
+  Continue to round {{ (game.state()?.round ?? 1) + 1 }}
+</button>

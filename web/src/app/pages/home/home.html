@@ -1,0 +1,42 @@
+<section class="hero">
+  <p class="eyebrow">Your next game night starts here</p>
+  <h1>One deck.<br /><span>Three ways to play.</span></h1>
+  <p class="lead">
+    Describe it. Say one word. Act it out. Race the clock with your favorite people.
+  </p>
+  <div class="actions">
+    <button mat-flat-button (click)="start()">Start new game</button>
+    @if (game.state(); as state) {
+      <a mat-stroked-button [routerLink]="gamePath(state.phase)">Resume saved game</a>
+    }
+    <a mat-button routerLink="/rules">How to play</a>
+  </div>
+</section>
+<section class="grid three" aria-label="Three rounds">
+  <mat-card
+    ><mat-card-content
+      ><p class="eyebrow">01 · Describe</p>
+      <h2>Find the right clues</h2>
+      <p>Use as many clues as you like. No names and no passing.</p></mat-card-content
+    ></mat-card
+  >
+  <mat-card
+    ><mat-card-content
+      ><p class="eyebrow">02 · One word</p>
+      <h2>Make it count</h2>
+      <p>Same characters, just one word per card. Remember round one!</p></mat-card-content
+    ></mat-card
+  >
+  <mat-card
+    ><mat-card-content
+      ><p class="eyebrow">03 · Mime</p>
+      <h2>Let actions speak</h2>
+      <p>No talking. Bring your best silent performance.</p></mat-card-content
+    ></mat-card
+  >
+</section>
+<section class="panel">
+  <h2>Make the deck your own</h2>
+  <p>Play with our starter characters or create, edit, and share your own decks.</p>
+  <a mat-stroked-button routerLink="/decks">Manage decks</a>
+</section>

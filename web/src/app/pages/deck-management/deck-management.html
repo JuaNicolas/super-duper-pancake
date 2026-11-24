@@ -1,0 +1,65 @@
+<p class="eyebrow">Your collection</p>
+<h1>Make it personal</h1>
+<p class="lead">Create a cast everyone knows. Decks need at least 50 characters to play.</p>
+@if (game.state()?.phase === 'deck-selection') {
+  <a mat-stroked-button routerLink="/deck-selection">Back to deck selection</a>
+}
+<section class="grid two">
+  @for (deck of decks.decks(); track deck.id) {
+    <div class="panel">
+      <h2>{{ deck.name }}</h2>
+      <p>{{ deck.cards.length }} characters · {{ deck.builtIn ? 'Built-in' : 'Custom' }}</p>
+      <div class="actions">
+        <button mat-button (click)="edit(deck)">
+          {{ deck.builtIn ? 'Customize a copy' : 'Edit' }}
+        </button>
+        <button mat-button (click)="export(deck)">Export JSON</button>
+        @if (!deck.builtIn) {
+          <button mat-button (click)="delete(deck)">Delete</button>
+        }
+      </div>
+    </div>
+  }
+</section>
+<section class="panel">
+  <h2>{{ editingId ? 'Edit deck' : 'Create a deck' }}</h2>
+  <form (ngSubmit)="save()" class="stack">
+    <mat-form-field
+      ><mat-label>Deck name</mat-label
+      ><input matInput name="deckName" [(ngModel)]="deckName" maxlength="80" required
+    /></mat-form-field>
+    <mat-form-field
+      ><mat-label>Characters, one per line</mat-label
+      ><textarea
+        matInput
+        name="characters"
+        [(ngModel)]="characters"
+        rows="8"
+        maxlength="150000"
+        required
+      ></textarea
+      ><mat-hint>Blank lines are ignored.</mat-hint></mat-form-field
+    >
+    <div class="actions">
+      <button mat-flat-button type="submit">Save deck</button
+      ><button mat-button type="button" (click)="clear()">Clear editor</button>
+    </div>
+  </form>
+</section>
+<section class="panel">
+  <h2>Share a deck</h2>
+  <p>Import a JSON file or paste an exported deck. Imported decks become editable custom copies.</p>
+  <label for="deck-file">Import deck JSON file (up to 1 MB)</label>
+  <input id="deck-file" type="file" accept=".json,application/json" (change)="importFile($event)" />
+  <mat-form-field class="full-width"
+    ><mat-label>Deck JSON</mat-label
+    ><textarea matInput [(ngModel)]="json" rows="6" maxlength="1000000"></textarea>
+  </mat-form-field>
+  <button mat-stroked-button [disabled]="!json.trim()" (click)="import()">Import JSON</button>
+</section>
+@if (error()) {
+  <p class="error" role="alert">{{ error() }}</p>
+}
+@if (message()) {
+  <p role="status">{{ message() }}</p>
+}

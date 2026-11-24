@@ -1,0 +1,67 @@
+@if (game.state(); as state) {
+  <div class="actions spread">
+    <p class="eyebrow">
+      Round {{ state.round }} of 3 ·
+      {{ state.round === 1 ? 'Describe' : state.round === 2 ? 'One word' : 'Mime' }}
+    </p>
+    <a mat-button routerLink="/rules">Round rules</a>
+  </div>
+  <h1>{{ game.activeTeam()?.name }}</h1>
+  <p class="lead">
+    Clue giver: <strong>{{ game.activePlayer()?.name }}</strong>
+  </p>
+  <div class="play-layout">
+    <section class="play-card panel" aria-label="Current card">
+      @if (state.turn) {
+        <p class="eyebrow">Teammates: look away from this screen</p>
+        <h2 class="character">{{ game.currentCard()?.name }}</h2>
+        <div class="actions centered">
+          <button mat-flat-button [disabled]="!timer.running()" (click)="game.correct()">
+            Correct +1
+          </button>
+          <button
+            mat-stroked-button
+            [disabled]="!game.canPass() || !timer.running()"
+            (click)="game.pass()"
+          >
+            Pass
+          </button>
+        </div>
+        @if (state.round === 1) {
+          <p>Passing is not allowed in round one.</p>
+        }
+        <button mat-button (click)="game.endTurn()">End turn early</button>
+      } @else {
+        <p class="eyebrow">Hand the screen to the clue giver</p>
+        <h2>Ready for your turn?</h2>
+        <p>
+          {{
+            state.round === 1
+              ? 'Unlimited clues. No names or parts of names. No passing.'
+              : state.round === 2
+                ? 'Only one word per card. Passing is allowed.'
+                : 'Mime only. No speaking. Passing is allowed.'
+          }}
+        </p>
+        <button mat-flat-button (click)="game.startTurn()">Start 60-second turn</button>
+      }
+    </section>
+    <aside class="panel turn-info">
+      <p class="eyebrow">Time remaining</p>
+      <p class="countdown" role="timer" aria-label="Seconds remaining">
+        {{ state.turn ? timer.remaining() : 60 }}<span>s</span>
+      </p>
+      <mat-progress-bar
+        mode="determinate"
+        [value]="((state.turn ? timer.remaining() : 60) / 60) * 100"
+        aria-label="Turn time remaining"
+      />
+      <p role="status">
+        <strong>{{ state.remainingCardIds.length }}</strong> / 50 cards remaining
+      </p>
+      <p>One point per correct guess. Unsolved cards stay in the deck.</p>
+      <p class="muted">The clock keeps running if you leave or refresh this page.</p>
+    </aside>
+  </div>
+  <section class="panel"><app-scoreboard /></section>
+}

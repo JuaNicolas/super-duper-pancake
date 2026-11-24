@@ -1,0 +1,29 @@
+<div class="table-scroll">
+  <table>
+    <caption>
+      Team scoreboard
+    </caption>
+    <thead>
+      <tr>
+        <th scope="col">Team</th>
+        <th scope="col">Round 1</th>
+        <th scope="col">Round 2</th>
+        <th scope="col">Round 3</th>
+        <th scope="col">Total</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (score of game.scores(); track score.teamId) {
+        <tr>
+          <th scope="row">{{ score.name }}</th>
+          @for (points of score.rounds; track $index) {
+            <td>{{ points }}</td>
+          }
+          <td>
+            <strong>{{ score.total }}</strong>
+          </td>
+        </tr>
+      }
+    </tbody>
+  </table>
+</div>
