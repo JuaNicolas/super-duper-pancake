@@ -2,6 +2,7 @@ import { Injectable, computed, inject, signal } from '@angular/core';
 import { CharacterCard, Deck, GameState, Round, Team } from '../models/game.models';
 import { StorageService } from './storage.service';
 import { TimerService } from './timer.service';
+import { TurnSoundService } from './turn-sound.service';
 import { TURN_DURATION_MS, validGameState } from './game-state.validation';
 import { validDeck, validTeams } from './validation';
 
@@ -11,8 +12,11 @@ export const GAME_STORAGE_KEY = 'party-cards.game.v1';
 export class GameService {
   private readonly storage = inject(StorageService);
   private readonly timer = inject(TimerService);
+  private readonly turnSound = inject(TurnSoundService);
   private readonly stateValue = signal<GameState | null>(null);
   readonly state = this.stateValue.asReadonly();
+  private readonly timeUpValue = signal(false);
+  readonly timeUp = this.timeUpValue.asReadonly();
   readonly currentCard = computed<CharacterCard | null>(() => {
     const state = this.state();
     return state?.deck.find((card) => card.id === state.currentCardId) ?? null;
@@ -70,6 +74,7 @@ export class GameService {
 
   newGame(): void {
     this.timer.stop();
+    this.dismissTimeUp();
     this.commit({
       phase: 'setup',
       teams: [],
@@ -121,6 +126,7 @@ export class GameService {
       return;
     }
     if (state.phase !== 'playing') throw new Error('A turn cannot start now.');
+    this.dismissTimeUp();
     const team = state.teams[state.activeTeamIndex];
     const startedAt = Date.now();
     const turn = {
@@ -169,7 +175,12 @@ export class GameService {
   endTurn(): void {
     const state = this.requireState();
     if (!state.turn) return;
+    if (this.expireIfNeeded()) return;
     this.finishTurn(state);
+  }
+
+  dismissTimeUp(): void {
+    this.timeUpValue.set(false);
   }
 
   nextRound(): void {
@@ -189,20 +200,20 @@ export class GameService {
   private resumeTimer(turnId: string, deadline: number): void {
     this.timer.start(deadline, () => {
       const state = this.state();
-      if (state?.turn?.id === turnId) this.finishTurn(state);
+      if (state?.turn?.id === turnId) this.finishTurn(state, true);
     });
   }
 
   private expireIfNeeded(): boolean {
     const state = this.state();
     if (state?.turn && Date.now() >= state.turn.endsAt) {
-      this.finishTurn(state);
+      this.finishTurn(state, true);
       return true;
     }
     return false;
   }
 
-  private finishTurn(state: GameState): void {
+  private finishTurn(state: GameState, timeExpired = false): void {
     const turn = state.turn!;
     this.timer.stop();
     const playerIndices = [...state.playerIndices];
@@ -225,6 +236,10 @@ export class GameService {
           ? 'finished'
           : 'round-summary',
     });
+    if (timeExpired) {
+      this.timeUpValue.set(true);
+      this.turnSound.play();
+    }
   }
 
   private requireState(): GameState {

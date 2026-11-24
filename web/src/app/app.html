@@ -1,4 +1,16 @@
 <a class="skip-link" href="#main">Skip to content</a>
+@if (game.timeUp()) {
+  <div class="time-up" role="alert">
+    <div>
+      <strong>Time's up!</strong>
+      <span>The turn has ended.</span>
+      @if (!turnSound.lastPlaySucceeded()) {
+        <span>Sound unavailable. Check your device or enable sound during the next turn.</span>
+      }
+    </div>
+    <button mat-stroked-button type="button" (click)="game.dismissTimeUp()">Dismiss</button>
+  </div>
+}
 <mat-toolbar>
   <a class="brand" routerLink="/">Party Cards <span>Three rounds. Endless laughs.</span></a>
   <nav aria-label="Main navigation">

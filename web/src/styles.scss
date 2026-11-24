@@ -1,5 +1,7 @@
 @use '@angular/material' as mat;
 
+$app-font-family: Roboto, 'Segoe UI', sans-serif;
+
 html {
   @include mat.theme(
     (
@@ -7,7 +9,9 @@ html {
         primary: mat.$violet-palette,
         tertiary: mat.$orange-palette,
       ),
-      typography: Roboto,
+      typography: (
+        plain-family: $app-font-family,
+      ),
       density: 0,
     )
   );
@@ -20,7 +24,7 @@ html {
 }
 body {
   margin: 0;
-  font-family: Roboto, 'Segoe UI', sans-serif;
+  font-family: $app-font-family;
   color: #242037;
 }
 mat-toolbar {
