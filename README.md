@@ -46,6 +46,7 @@ web/
         services/
           game.service.ts        Authoritative game transitions and scores
           timer.service.ts       Absolute-deadline countdown
+          turn-sound.service.ts  End-of-turn audio alert
           storage.service.ts     Safe localStorage access
           deck.service.ts        Built-in and custom decks, JSON validation
       pages/
@@ -68,6 +69,16 @@ least 50 characters. Exactly 50 cards are selected and reused in all three
 rounds. Teams alternate turns and rotate clue givers. Each correct answer
 awards one point. Unsolved cards return; passing is disabled in round one.
 Clue restrictions are enforced by players, not speech recognition.
+
+During a turn, use the Correct and Pass buttons, or swipe the card right for
+correct and left to pass on a touchscreen. Passing remains disabled in round
+one. The timer continues if you open the rules or leave the page.
+When time runs out, three short beeps play and a visual alert appears until
+dismissed or the next turn starts. The alert also appears if a turn expired
+while the page was closed, and respects reduced-motion settings. Sound depends
+on the device volume and browser audio permissions; after refreshing an active
+turn, tap Enable sound to allow the alarm. Browsers may suspend audio or timers
+while the page is in the background.
 
 Progress and custom decks are saved in this browser's localStorage when
 available. Refreshing does not restart an active 60-second deadline.

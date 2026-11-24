@@ -4,6 +4,8 @@ import { Deck, GameState, Team } from '../models/game.models';
 import { GAME_STORAGE_KEY, GameService } from './game.service';
 import { StorageService } from './storage.service';
 import { TimerService } from './timer.service';
+import { TurnSoundService } from './turn-sound.service';
+import { TURN_DURATION_MS } from './game-state.validation';
 
 const teams: Team[] = [
   {
@@ -123,6 +125,7 @@ describe('GameService', () => {
   });
 
   it('uses exactly the same 50 cards for all rounds and scores once per round', () => {
+    const sound = vi.spyOn(TestBed.inject(TurnSoundService), 'play');
     ready();
     const fixed = game
       .state()!
@@ -147,6 +150,7 @@ describe('GameService', () => {
     expect(() => game.startTurn()).toThrow();
     expect(() => game.nextRound()).toThrow();
     expect(reload().state()!.phase).toBe('finished');
+    expect(sound).not.toHaveBeenCalled();
   });
 
   it.each([2, 3])(
@@ -179,6 +183,7 @@ describe('GameService', () => {
   );
 
   it('does not reset a turn through repeated start calls and rejects expired guesses before timer ticks', () => {
+    const sound = vi.spyOn(TestBed.inject(TurnSoundService), 'play');
     ready();
     game.startTurn();
     const deadline = game.state()!.turn!.endsAt;
@@ -188,6 +193,8 @@ describe('GameService', () => {
     vi.setSystemTime(deadline);
     game.correct();
     expect(game.state()!.turn).toBeNull();
+    expect(game.timeUp()).toBe(true);
+    expect(sound).toHaveBeenCalledOnce();
     expect(game.scores().map((score) => score.total)).toEqual([0, 0]);
     expect(game.state()!.turns).toHaveLength(1);
     expect(timer.running()).toBe(false);
@@ -200,13 +207,42 @@ describe('GameService', () => {
     game.startTurn();
     vi.advanceTimersByTime(60_000);
     expect(game.state()!.turn).toBeNull();
+    expect(game.timeUp()).toBe(true);
     finishRound();
     game.nextRound();
     game.startTurn();
     vi.setSystemTime(game.state()!.turn!.endsAt);
     game.pass();
     expect(game.state()!.turn).toBeNull();
+    expect(game.timeUp()).toBe(true);
     expect(game.state()!.turns.at(-1)!.passedCardIds).toEqual([]);
+  });
+
+  it('only alerts on timeout and clears the alert when dismissed or a new turn or game starts', () => {
+    const sound = vi.spyOn(TestBed.inject(TurnSoundService), 'play');
+    ready();
+    game.startTurn();
+    game.endTurn();
+    expect(game.timeUp()).toBe(false);
+    expect(sound).not.toHaveBeenCalled();
+    game.startTurn();
+    vi.advanceTimersByTime(TURN_DURATION_MS);
+    expect(game.timeUp()).toBe(true);
+    expect(sound).toHaveBeenCalledTimes(1);
+    game.dismissTimeUp();
+    expect(game.timeUp()).toBe(false);
+    game.startTurn();
+    vi.setSystemTime(game.state()!.turn!.endsAt);
+    game.endTurn();
+    expect(game.timeUp()).toBe(true);
+    expect(sound).toHaveBeenCalledTimes(2);
+    game.startTurn();
+    expect(game.timeUp()).toBe(false);
+    vi.advanceTimersByTime(TURN_DURATION_MS);
+    expect(game.timeUp()).toBe(true);
+    expect(sound).toHaveBeenCalledTimes(3);
+    game.newGame();
+    expect(game.timeUp()).toBe(false);
   });
 
   it('persists each mutation and resumes the original deadline across reloads', () => {
@@ -228,6 +264,7 @@ describe('GameService', () => {
   });
 
   it('immediately closes an already-expired restored turn without awarding points', () => {
+    const sound = vi.spyOn(TestBed.inject(TurnSoundService), 'play');
     ready();
     game.startTurn();
     const deadline = game.state()!.turn!.endsAt;
@@ -235,6 +272,8 @@ describe('GameService', () => {
     vi.setSystemTime(deadline + 30_000);
     game = reload();
     expect(game.state()!.turn).toBeNull();
+    expect(game.timeUp()).toBe(true);
+    expect(sound).toHaveBeenCalledOnce();
     expect(game.state()!.turns[0].endedAt).toBe(deadline);
     expect(game.activeTeam()!.id).toBe('b');
     expect(timer.running()).toBe(false);
